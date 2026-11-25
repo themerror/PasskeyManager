@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "PasskeyManager (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "PasskeyManager (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

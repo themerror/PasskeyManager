@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- C# 资源键 -->
+  <data name="LogPluginBackgroundActivated" xml:space="preserve">
+    <value>插件通过后台激活启动。</value>
+  </data>
+  <data name="LogPluginInitializationFailed" xml:space="preserve">
+    <value>插件初始化失败：{0}</value>
+  </data>
+  <data name="CredentialCacheOnly" xml:space="preserve">
+    <value>仅缓存</value>
+  </data>
+  <data name="CredentialMetadataMissing" xml:space="preserve">
+    <value>元数据缺失</value>
+  </data>
+  <data name="SummaryLocalFormat" xml:space="preserve">
+    <value>本插件在本机存储了 {0} 条真实凭据。</value>
+  </data>
+  <data name="SummaryCacheFormat" xml:space="preserve">
+    <value>Windows 自动填充缓存中有 {0} 条凭据。</value>
+  </data>
+  <data name="VaultUnlocked" xml:space="preserve">
+    <value>保险库已解锁</value>
+  </data>
+  <data name="VaultLocked" xml:space="preserve">
+    <value>保险库已锁定</value>
+  </data>
+  <data name="VaultStatusUnlocked" xml:space="preserve">
+    <value>已解锁</value>
+  </data>
+  <data name="VaultStatusLocked" xml:space="preserve">
+    <value>已锁定</value>
+  </data>
+  <data name="RegistrationQuerying" xml:space="preserve">
+    <value>正在查询注册状态…</value>
+  </data>
+  <data name="SelectionPrompt" xml:space="preserve">
+    <value>从列表中选择一个通行密钥以查看详情。</value>
+  </data>
+  <data name="StatusCacheReadFailed" xml:space="preserve">
+    <value>读取 Windows 自动填充缓存失败。</value>
+  </data>
+  <data name="RegistrationStateQueryFailedFormat" xml:space="preserve">
+    <value>查询插件注册状态失败（HRESULT 0x{0:X8}）。</value>
+  </data>
+  <data name="LogRegisteredPending" xml:space="preserve">
+    <value>插件已注册，启用尚待完成。</value>
+  </data>
+  <data name="LogUnregistered" xml:space="preserve">
+    <value>插件已注销。</value>
+  </data>
+  <data name="LogHelloUnlock" xml:space="preserve">
+    <value>已通过 Windows Hello 解锁保险库。</value>
+  </data>
+  <data name="StatusUnlockedTitle" xml:space="preserve">
+    <value>已解锁</value>
+  </data>
+  <data name="StatusUnlockedMessage" xml:space="preserve">
+    <value>保险库已解锁，凭据可用。</value>
+  </data>
+  <data name="StatusUnlockFailedTitle" xml:space="preserve">
+    <value>解锁失败</value>
+  </data>
+  <data name="StatusUnlockFailedMessage" xml:space="preserve">
+    <value>Windows Hello 验证失败，保险库仍保持锁定。</value>
+  </data>
+  <data name="LogVaultLocked" xml:space="preserve">
+    <value>保险库已锁定。</value>
+  </data>
+  <data name="StatusVaultLockedMessage" xml:space="preserve">
+    <value>保险库已锁定；插件操作将要求 Windows Hello 验证。</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="Disabled" xml:space="preserve">
+    <value>已禁用</value>
+  </data>
+  <data name="LogMinimizeFormat" xml:space="preserve">
+    <value>简化界面已切换为{0}。</value>
+  </data>
+  <data name="StatusCacheUpdateFailed" xml:space="preserve">
+    <value>更新此凭据的自动填充缓存失败。</value>
+  </data>
+  <data name="LogCacheToggleFormat" xml:space="preserve">
+    <value>{0} 的自动填充缓存条目已{1}。</value>
+  </data>
+  <data name="CacheAdded" xml:space="preserve">
+    <value>加入</value>
+  </data>
+  <data name="CacheRemoved" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="StatusCacheBatchFailed" xml:space="preserve">
+    <value>批量更新自动填充缓存失败。</value>
+  </data>
+  <data name="StatusCacheDeleteFailed" xml:space="preserve">
+    <value>从自动填充缓存中移除此凭据失败。</value>
+  </data>
+  <data name="LogCredentialDeletedFormat" xml:space="preserve">
+    <value>已删除 {0} 的凭据。</value>
+  </data>
+  <data name="StatusCredentialDeletedTitle" xml:space="preserve">
+    <value>凭据已删除</value>
+  </data>
+  <data name="StatusCredentialDeletedMessage" xml:space="preserve">
+    <value>该凭据及其自动填充缓存条目已删除。</value>
+  </data>
+  <data name="StatusCacheClearFailed" xml:space="preserve">
+    <value>清空自动填充缓存失败。</value>
+  </data>
+  <data name="LogAllCredentialsDeleted" xml:space="preserve">
+    <value>全部凭据已删除。</value>
+  </data>
+  <data name="StatusAllDeletedTitle" xml:space="preserve">
+    <value>全部凭据已删除</value>
+  </data>
+  <data name="StatusAllDeletedMessage" xml:space="preserve">
+    <value>此插件创建的所有真实凭据、缓存元数据与 CNG 私钥均已删除。</value>
+  </data>
+  <data name="ErrorSelectFirst" xml:space="preserve">
+    <value>请先选择一个通行密钥。</value>
+  </data>
+  <data name="RegistrationNotRegistered" xml:space="preserve">
+    <value>插件尚未注册。</value>
+  </data>
+  <data name="RegistrationEnabled" xml:space="preserve">
+    <value>插件已注册且已启用。</value>
+  </data>
+  <data name="RegistrationPending" xml:space="preserve">
+    <value>插件已注册；请在系统设置中启用。</value>
+  </data>
+  <data name="StatusHResultMessageFormat" xml:space="preserve">
+    <value>操作失败，HRESULT 0x{0:X8}。</value>
+  </data>
+  <data name="RegistrationAddFailed" xml:space="preserve">
+    <value>注册插件失败。</value>
+  </data>
+  <data name="RegistrationRemoveFailed" xml:space="preserve">
+    <value>注销插件失败。</value>
+  </data>
+  <data name="StatusRegisteredTitle" xml:space="preserve">
+    <value>已注册</value>
+  </data>
+  <data name="StatusRemovedTitle" xml:space="preserve">
+    <value>已注销</value>
+  </data>
+  <data name="StatusRegisteredNext" xml:space="preserve">
+    <value>插件已注册；请在 Windows 通行密钥设置中启用。</value>
+  </data>
+  <data name="StatusRemovedMessage" xml:space="preserve">
+    <value>插件已注销。</value>
+  </data>
+  <data name="DialogDeleteCredentialTitle" xml:space="preserve">
+    <value>删除此通行密钥？</value>
+  </data>
+  <data name="DialogDeleteCredentialMessage" xml:space="preserve">
+    <value>将永久删除 {0}（{1}）的凭据及其 CNG 私钥，此操作不可撤销。</value>
+  </data>
+  <data name="DialogDeleteCredentialPrimary" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="DialogCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="DialogDeleteAllTitle" xml:space="preserve">
+    <value>删除全部凭据？</value>
+  </data>
+  <data name="DialogDeleteAllMessage" xml:space="preserve">
+    <value>将永久删除此插件创建的全部真实凭据、系统缓存条目与 CNG 私钥，此操作不可撤销。</value>
+  </data>
+  <data name="DialogDeleteAllPrimary" xml:space="preserve">
+    <value>全部删除</value>
+  </data>
+  <data name="BrowserOperationTitle" xml:space="preserve">
+    <value>打开测试网站</value>
+  </data>
+  <data name="BrowserOperationMessage" xml:space="preserve">
+    <value>将在浏览器中打开 WebAuthn 测试页面，请在该页面发起注册或登录。</value>
+  </data>
+  <data name="OperationFailed" xml:space="preserve">
+    <value>操作失败。</value>
+  </data>
+  <data name="LogUnhandledPluginException" xml:space="preserve">
+    <value>插件发生未处理异常：{0}：{1}</value>
+  </data>
+  <data name="LogMakeCredentialCallback" xml:space="preserve">
+    <value>收到 MakeCredential 回调。</value>
+  </data>
+  <data name="LogCredentialCreatedFormat" xml:space="preserve">
+    <value>已为 {0} 创建凭据。</value>
+  </data>
+  <data name="LogCredentialCacheFailedFormat" xml:space="preserve">
+    <value>凭据已创建，但写入自动填充缓存失败（HRESULT 0x{0:X8}）。</value>
+  </data>
+  <data name="LogGetAssertionCallback" xml:space="preserve">
+    <value>收到 GetAssertion 回调。</value>
+  </data>
+  <data name="LogAssertionCreatedFormat" xml:space="preserve">
+    <value>已为 {0} 生成断言。</value>
+  </data>
+  <data name="LogPlatformSignatureFailed" xml:space="preserve">
+    <value>平台密钥签名验证失败（长度 {0}，magic 0x{1:X8}）。</value>
+  </data>
+  <data name="LogPlatformSignatureSucceeded" xml:space="preserve">
+    <value>平台密钥签名验证成功。</value>
+  </data>
+  <data name="LogHelloUvSucceeded" xml:space="preserve">
+    <value>Windows Hello 用户验证成功。</value>
+  </data>
+  <data name="LogOperationSucceeded" xml:space="preserve">
+    <value>插件操作成功完成。</value>
+  </data>
+  <data name="LogOperationFailedFormat" xml:space="preserve">
+    <value>插件操作失败（HRESULT 0x{0:X8}）。</value>
+  </data>
+  <data name="OperationWaitingHello" xml:space="preserve">
+    <value>正在等待 Windows Hello…</value>
+  </data>
+  <data name="OperationHelloRetry" xml:space="preserve">
+    <value>验证失败，请重试。</value>
+  </data>
+  <data name="OperationSelectCredential" xml:space="preserve">
+    <value>请选择一个账户以继续。</value>
+  </data>
+  <data name="OperationMakeWindowTitle" xml:space="preserve">
+    <value>创建通行密钥</value>
+  </data>
+  <data name="OperationGetWindowTitle" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="OperationMakeHeader" xml:space="preserve">
+    <value>创建新的通行密钥</value>
+  </data>
+  <data name="OperationGetHeaderFormat" xml:space="preserve">
+    <value>登录到 {0}</value>
+  </data>
+  <data name="OperationSiteAccountFormat" xml:space="preserve">
+    <value>站点：{0}
+账户：{1}</value>
+  </data>
+  <data name="OperationHelloDescription" xml:space="preserve">
+    <value>使用 Windows Hello 验证以继续。</value>
+  </data>
+  <data name="ProductionWarning" xml:space="preserve">
+    <value>警告：您正在将本软件用于生产环境。本软件仅供学习，禁止用于真实账户或生产系统。</value>
+  </data>
+  <data name="OperationMakeBody" xml:space="preserve">
+    <value>网站请求创建新的通行密钥，请在继续前核对站点与账户信息。</value>
+  </data>
+  <data name="OperationSaveButton" xml:space="preserve">
+    <value>保存通行密钥</value>
+  </data>
+  <data name="OperationSignInButton" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="OperationCancelButton" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="LogComInstanceCreated" xml:space="preserve">
+    <value>已创建 COM 实例。</value>
+  </data>
+  <data name="LogComFactoryRegistered" xml:space="preserve">
+    <value>COM 工厂已注册。</value>
+  </data>
+  <data name="HelloUnavailableFormat" xml:space="preserve">
+    <value>Windows Hello 当前不可用（状态：{0}）。</value>
+  </data>
+  <data name="HelloUnlockMessage" xml:space="preserve">
+    <value>验证身份以解锁保险库。</value>
+  </data>
+  <!-- MainPage.xaml Uid 键 -->
+  <data name="PluginIdentityBadge.ToolTipService.ToolTip" xml:space="preserve">
+    <value>纯 C# WebAuthn 插件；使用真实 CNG 密钥与 Windows Hello</value>
+  </data>
+  <data name="PluginIdentityLabel.Text" xml:space="preserve">
+    <value>C# 插件</value>
+  </data>
+  <data name="VaultButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>锁定或解锁保险库</value>
+  </data>
+  <data name="VaultButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>锁定或解锁保险库</value>
+  </data>
+  <data name="NavOverview.Content" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="NavOverview.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="NavPasskeys.Content" xml:space="preserve">
+    <value>通行密钥</value>
+  </data>
+  <data name="NavPasskeys.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>通行密钥</value>
+  </data>
+  <data name="NavActivity.Content" xml:space="preserve">
+    <value>活动</value>
+  </data>
+  <data name="NavActivity.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>活动</value>
+  </data>
+  <data name="NavSettings.Content" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="NavSettings.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="OverviewTitle.Text" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="StatLocalLabel.Text" xml:space="preserve">
+    <value>本地凭据</value>
+  </data>
+  <data name="StatAutofillLabel.Text" xml:space="preserve">
+    <value>自动填充</value>
+  </data>
+  <data name="StatVaultLabel.Text" xml:space="preserve">
+    <value>保险库状态</value>
+  </data>
+  <data name="RealOpsTitle.Text" xml:space="preserve">
+    <value>真实 WebAuthn 操作</value>
+  </data>
+  <data name="RealOpsDescription.Text" xml:space="preserve">
+    <value>按钮只打开测试网站；创建与登录必须由网站发起，再由 Windows 调用此插件。</value>
+  </data>
+  <data name="OverviewNewPasskeyButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>创建测试</value>
+  </data>
+  <data name="OverviewNewPasskeyLabel.Text" xml:space="preserve">
+    <value>创建测试</value>
+  </data>
+  <data name="OverviewSignInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>登录测试</value>
+  </data>
+  <data name="OverviewSignInLabel.Text" xml:space="preserve">
+    <value>登录测试</value>
+  </data>
+  <data name="RecentActivityTitle.Text" xml:space="preserve">
+    <value>最近活动</value>
+  </data>
+  <data name="ActivityCountPrefix.Text" xml:space="preserve">
+    <value>共</value>
+  </data>
+  <data name="ActivityCountSuffix.Text" xml:space="preserve">
+    <value>条</value>
+  </data>
+  <data name="SecurityNote.Message" xml:space="preserve">
+    <value>此应用会注册真实 COM 插件并创建 CNG 私钥。请仅用于测试；启用插件与 Windows Hello 验证均由用户完成。</value>
+  </data>
+  <data name="PasskeysTitle.Text" xml:space="preserve">
+    <value>通行密钥</value>
+  </data>
+  <data name="PasskeysDescription.Text" xml:space="preserve">
+    <value>管理此插件创建的真实凭据与 Windows 自动填充缓存。</value>
+  </data>
+  <data name="SearchBox.Header" xml:space="preserve">
+    <value>搜索通行密钥</value>
+  </data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve">
+    <value>按用户名或网站筛选</value>
+  </data>
+  <data name="SearchBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>搜索通行密钥</value>
+  </data>
+  <data name="AddAllToCacheButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>全部加入缓存</value>
+  </data>
+  <data name="AddAllToCacheButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>将全部本地凭据加入 Windows 自动填充缓存</value>
+  </data>
+  <data name="AddAllToCacheLabel.Text" xml:space="preserve">
+    <value>全部加入缓存</value>
+  </data>
+  <data name="RemoveAllFromCacheButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>全部移除</value>
+  </data>
+  <data name="RemoveAllFromCacheButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>将全部凭据移出 Windows 自动填充缓存</value>
+  </data>
+  <data name="RemoveAllFromCacheLabel.Text" xml:space="preserve">
+    <value>全部移除</value>
+  </data>
+  <data name="PasskeyList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>真实凭据列表</value>
+  </data>
+  <data name="EmptyCredentialsTitle.Text" xml:space="preserve">
+    <value>还没有通行密钥</value>
+  </data>
+  <data name="EmptyCredentialsDescription.Text" xml:space="preserve">
+    <value>注册并启用插件后，通过浏览器创建第一条真实凭据。</value>
+  </data>
+  <data name="EmptyNewPasskeyButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>创建测试</value>
+  </data>
+  <data name="EmptyNewPasskeyLabel.Text" xml:space="preserve">
+    <value>创建测试</value>
+  </data>
+  <data name="EmptySearchTitle.Text" xml:space="preserve">
+    <value>没有匹配的通行密钥</value>
+  </data>
+  <data name="EmptySearchDescription.Text" xml:space="preserve">
+    <value>换个关键词试试。</value>
+  </data>
+  <data name="DetailSiteLabel.Text" xml:space="preserve">
+    <value>网站</value>
+  </data>
+  <data name="DetailCredentialIdLabel.Text" xml:space="preserve">
+    <value>凭据 ID</value>
+  </data>
+  <data name="DetailCreatedLabel.Text" xml:space="preserve">
+    <value>创建时间</value>
+  </data>
+  <data name="DetailStorageLabel.Text" xml:space="preserve">
+    <value>存储位置</value>
+  </data>
+  <data name="DetailKeyNameLabel.Text" xml:space="preserve">
+    <value>CNG 密钥名称</value>
+  </data>
+  <data name="ToggleAutofillButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>切换自动填充</value>
+  </data>
+  <data name="ToggleAutofillButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>在 Windows 自动填充缓存中添加或移除此凭据</value>
+  </data>
+  <data name="ToggleAutofillLabel.Text" xml:space="preserve">
+    <value>切换自动填充</value>
+  </data>
+  <data name="SelectedSignInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>登录测试</value>
+  </data>
+  <data name="SelectedSignInLabel.Text" xml:space="preserve">
+    <value>登录测试</value>
+  </data>
+  <data name="DeletePasskeyButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>删除此通行密钥</value>
+  </data>
+  <data name="DeletePasskeyButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>删除此真实通行密钥及其 CNG 私钥</value>
+  </data>
+  <data name="DeletePasskeyLabel.Text" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>活动</value>
+  </data>
+  <data name="ActivityDescription.Text" xml:space="preserve">
+    <value>真实插件操作与状态变化记录。</value>
+  </data>
+  <data name="ActivityEventsPrefix.Text" xml:space="preserve">
+    <value>已记录</value>
+  </data>
+  <data name="ActivityEventsSuffix.Text" xml:space="preserve">
+    <value>条事件</value>
+  </data>
+  <data name="ClearActivityButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>清空记录</value>
+  </data>
+  <data name="ClearActivityLabel.Text" xml:space="preserve">
+    <value>清空记录</value>
+  </data>
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SettingsDescription.Text" xml:space="preserve">
+    <value>这些选项会改变真实插件注册、确认 UI 与保险库状态，请仅用于测试。</value>
+  </data>
+  <data name="RegisterPluginTitle.Text" xml:space="preserve">
+    <value>注册插件</value>
+  </data>
+  <data name="RegisterPluginDescription.Text" xml:space="preserve">
+    <value>调用 WebAuthNPluginAddAuthenticator / RemoveAuthenticator；启用必须由用户在系统设置中完成。</value>
+  </data>
+  <data name="RegisteredToggle.Header" xml:space="preserve">
+    <value>已注册</value>
+  </data>
+  <data name="RegisteredToggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="RegisteredToggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="MinimizeUiTitle.Text" xml:space="preserve">
+    <value>Minimize UI（简化界面）</value>
+  </data>
+  <data name="MinimizeUiDescription.Text" xml:space="preserve">
+    <value>控制真实插件的确认窗口；保险库锁定或存在多个候选时始终显示 UI。</value>
+  </data>
+  <data name="MinimizeUiToggle.Header" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="MinimizeUiToggle.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="MinimizeUiToggle.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="WindowsSettingsTitle.Text" xml:space="preserve">
+    <value>Windows 通行密钥设置</value>
+  </data>
+  <data name="WindowsSettingsDescription.Text" xml:space="preserve">
+    <value>在系统设置中管理真实的通行密钥与登录选项。</value>
+  </data>
+  <data name="OpenWindowsSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>打开 Windows 设置</value>
+  </data>
+  <data name="OpenWindowsSettingsLabel.Text" xml:space="preserve">
+    <value>打开 Windows 设置</value>
+  </data>
+  <data name="DeleteAllTitle.Text" xml:space="preserve">
+    <value>删除全部凭据</value>
+  </data>
+  <data name="DeleteAllDescription.Text" xml:space="preserve">
+    <value>永久删除此插件创建的全部真实凭据、系统缓存元数据与 CNG 私钥，此操作不可撤销。</value>
+  </data>
+  <data name="DeleteAllButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>删除全部凭据</value>
+  </data>
+  <data name="DeleteAllLabel.Text" xml:space="preserve">
+    <value>删除全部</value>
+  </data>
+  <data name="PlatformLimitsTitle.Text" xml:space="preserve">
+    <value>平台限制说明</value>
+  </data>
+  <data name="PlatformLimitsDescription.Text" xml:space="preserve">
+    <value>纯 C# 实现 IPluginAuthenticator、ES256 CNG 密钥、Windows Hello UV 与系统缓存同步。此项目用于验证官方插件流程，不是生产级密码库。</value>
+  </data>
+  <data name="StatusInfoBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>操作状态</value>
+  </data>
+  <data name="SettingsLanguageTitle.Text" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="SettingsLanguageDescription.Text" xml:space="preserve">
+    <value>选择界面语言，更改会立即刷新所有页面。</value>
+  </data>
+  <data name="LanguageSelector.Header" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="LanguageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>界面语言</value>
+  </data>
+  <data name="LanguageChangedTitle" xml:space="preserve">
+    <value>语言已更改</value>
+  </data>
+  <data name="LanguageChangedMessage" xml:space="preserve">
+    <value>界面语言已更新。</value>
+  </data>
+  <data name="CredentialAutofill" xml:space="preserve">
+    <value>自动填充</value>
+  </data>
+  <data name="CredentialLocalOnly" xml:space="preserve">
+    <value>仅本地</value>
+  </data>
+  <data name="LogCacheAllAdded" xml:space="preserve">
+    <value>全部本地凭据已加入 Windows 自动填充缓存</value>
+  </data>
+  <data name="LogCacheAllRemoved" xml:space="preserve">
+    <value>此插件的 Windows 自动填充缓存已清空</value>
+  </data>
+  <data name="SettingsLaunchSucceeded" xml:space="preserve">
+    <value>已打开 Windows 设置</value>
+  </data>
+  <data name="SettingsLaunchFailed" xml:space="preserve">
+    <value>无法打开 Windows 设置</value>
+  </data>
+  <data name="SettingsLaunchMessage" xml:space="preserve">
+    <value>请在“账户 &gt; 通行密钥 &gt; 高级选项”中启用 CSharp Passkey Manager。应用不能代替用户启用。</value>
+  </data>
+  <data name="SettingsLaunchManual" xml:space="preserve">
+    <value>请手动进入“设置 &gt; 账户 &gt; 通行密钥 &gt; 高级选项”。</value>
+  </data>
+  <data name="VaultLockTooltip" xml:space="preserve">
+    <value>锁定保险库</value>
+  </data>
+  <data name="VaultUnlockTooltip" xml:space="preserve">
+    <value>使用 Windows Hello 解锁保险库</value>
+  </data>
+</root>

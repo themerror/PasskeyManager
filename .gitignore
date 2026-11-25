@@ -1,0 +1,20 @@
+# 构建产物
+bin/
+obj/
+
+# Visual Studio / Rider
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# 测试与发布产物
+TestResults/
+artifacts/
+ui-test-artifacts/
+test-results.json
+*.log
+*.msix
+*.appx
+*.pfx

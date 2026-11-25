@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="PasskeyManager.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:PasskeyManager.Views"
+    xmlns:models="using:PasskeyManager.Models"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer Padding="{StaticResource AppSectionPadding}">
+        <StackPanel MaxWidth="860" Spacing="16">
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="SettingsTitle" Style="{StaticResource SubtitleTextBlockStyle}" Text="设置" />
+                <TextBlock
+                    x:Uid="SettingsDescription"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Text="这些选项会改变真实插件注册、确认 UI 与保险库状态，请仅用于测试。" />
+            </StackPanel>
+
+            <!-- Display language -->
+            <Border
+                Padding="{StaticResource AppCardPadding}"
+                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AppCardCornerRadius}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        Grid.Column="0"
+                        Width="{StaticResource AppIconHostSize}"
+                        Height="{StaticResource AppIconHostSize}">
+                        <Ellipse Fill="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE774;" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Uid="SettingsLanguageTitle" Style="{StaticResource BodyStrongTextBlockStyle}" Text="语言" />
+                        <TextBlock
+                            x:Uid="SettingsLanguageDescription"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="选择界面语言，更改会立即刷新所有页面。"
+                            TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                    <ComboBox
+                        x:Name="LanguageSelector"
+                        x:Uid="LanguageSelector"
+                        Grid.Column="2"
+                        MinWidth="160"
+                        VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="LanguageSelector"
+                        SelectionChanged="LanguageSelector_SelectionChanged">
+                        <ComboBoxItem Content="中文（简体）" Tag="zh-CN" />
+                        <ComboBoxItem Content="English" Tag="en-US" />
+                    </ComboBox>
+                </Grid>
+            </Border>
+
+            <!-- Simulated registration -->
+            <Border
+                Padding="{StaticResource AppCardPadding}"
+                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AppCardCornerRadius}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        Grid.Column="0"
+                        Width="{StaticResource AppIconHostSize}"
+                        Height="{StaticResource AppIconHostSize}">
+                        <Ellipse Fill="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE8D7;" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Uid="RegisterPluginTitle" Style="{StaticResource BodyStrongTextBlockStyle}" Text="注册插件" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind ViewModel.RegistrationStatusText, Mode=OneWay}" />
+                        <TextBlock
+                            x:Uid="RegisterPluginDescription"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="调用 WebAuthNPluginAddAuthenticator / RemoveAuthenticator；启用必须由用户在系统设置中完成。" />
+                    </StackPanel>
+                    <ToggleSwitch
+                        x:Name="RegisteredToggle"
+                        x:Uid="RegisteredToggle"
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Header="已注册"
+                        IsOn="{x:Bind ViewModel.IsRegistered, Mode=TwoWay}"
+                        OffContent="关"
+                        OnContent="开"
+                        Toggled="RegisteredToggle_Toggled" />
+                </Grid>
+            </Border>
+
+            <!-- Minimize UI -->
+            <Border
+                Padding="{StaticResource AppCardPadding}"
+                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AppCardCornerRadius}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        Grid.Column="0"
+                        Width="{StaticResource AppIconHostSize}"
+                        Height="{StaticResource AppIconHostSize}">
+                        <Ellipse Fill="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE8E7;" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Uid="MinimizeUiTitle" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Minimize UI（简化界面）" />
+                        <TextBlock
+                            x:Uid="MinimizeUiDescription"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="控制真实插件的确认窗口；保险库锁定或存在多个候选时始终显示 UI。" />
+                    </StackPanel>
+                    <ToggleSwitch
+                        x:Name="MinimizeUiToggle"
+                        x:Uid="MinimizeUiToggle"
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Header="启用"
+                        IsOn="{x:Bind ViewModel.IsMinimizeUiEnabled, Mode=TwoWay}"
+                        OffContent="关"
+                        OnContent="开"
+                        Toggled="MinimizeUiToggle_Toggled" />
+                </Grid>
+            </Border>
+
+            <!-- Windows passkey settings -->
+            <Border
+                Padding="{StaticResource AppCardPadding}"
+                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AppCardCornerRadius}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        Grid.Column="0"
+                        Width="{StaticResource AppIconHostSize}"
+                        Height="{StaticResource AppIconHostSize}">
+                        <Ellipse Fill="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE713;" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Uid="WindowsSettingsTitle" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Windows 通行密钥设置" />
+                        <TextBlock
+                            x:Uid="WindowsSettingsDescription"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="在系统设置中管理真实的通行密钥与登录选项。" />
+                    </StackPanel>
+                    <Button
+                        x:Uid="OpenWindowsSettingsButton"
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="OpenWindowsSettingsButton"
+                        AutomationProperties.Name="打开 Windows 设置"
+                        Click="OpenWindowsSettingsButton_Click">
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="6">
+                            <FontIcon FontSize="12" Glyph="&#xE8A7;" />
+                            <TextBlock x:Uid="OpenWindowsSettingsLabel" VerticalAlignment="Center" Text="打开 Windows 设置" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Delete every credential owned by this plugin -->
+            <Border
+                Padding="{StaticResource AppCardPadding}"
+                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AppCardCornerRadius}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        Grid.Column="0"
+                        Width="{StaticResource AppIconHostSize}"
+                        Height="{StaticResource AppIconHostSize}">
+                        <Ellipse Fill="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                            Glyph="&#xE72C;" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Uid="DeleteAllTitle" Style="{StaticResource BodyStrongTextBlockStyle}" Text="删除全部凭据" />
+                        <TextBlock
+                            x:Uid="DeleteAllDescription"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="永久删除此插件创建的全部真实凭据、系统缓存元数据与 CNG 私钥，此操作不可撤销。" />
+                    </StackPanel>
+                    <Button
+                        x:Uid="DeleteAllButton"
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="DeleteAllButton"
+                        AutomationProperties.Name="删除全部凭据"
+                        BorderBrush="{ThemeResource SystemFillColorCriticalBrush}"
+                        Click="DeleteAllButton_Click"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}">
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="6">
+                            <FontIcon FontSize="12" Glyph="&#xE74D;" />
+                            <TextBlock x:Uid="DeleteAllLabel" VerticalAlignment="Center" Text="删除全部" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Platform limitations -->
+            <Border
+                Padding="{StaticResource AppCardPadding}"
+                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AppCardCornerRadius}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        Grid.Column="0"
+                        Width="{StaticResource AppIconHostSize}"
+                        Height="{StaticResource AppIconHostSize}">
+                        <Ellipse Fill="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE946;" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock x:Uid="PlatformLimitsTitle" Style="{StaticResource BodyStrongTextBlockStyle}" Text="平台限制说明" />
+                        <TextBlock
+                            x:Uid="PlatformLimitsDescription"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            Text="纯 C# 实现 IPluginAuthenticator、ES256 CNG 密钥、Windows Hello UV 与系统缓存同步。此项目用于验证官方插件流程，不是生产级密码库。"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
