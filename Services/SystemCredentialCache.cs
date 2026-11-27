@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using PasskeyManager.Interop;
 using PasskeyManager.Models;
+using Windows.Win32;
+using Windows.Win32.Security.Authentication.WebAuthn;
 
 namespace PasskeyManager.Services;
 
@@ -9,17 +11,21 @@ namespace PasskeyManager.Services;
 /// for browser autofill scenarios. Ported from PluginCredentialManager.cpp
 /// (WebAuthNPluginAuthenticator*Credentials APIs). StoredCredential.KeyName is
 /// not part of the native cache structure.
+/// P/Invoke bindings and native types are CsWin32-generated
+/// (Windows.Win32.PInvoke / Windows.Win32.Security.Authentication.WebAuthn,
+/// see NativeMethods.txt).
 /// </summary>
 public sealed class SystemCredentialCache
 {
-    public int GetAll(out List<StoredCredential> credentials)
+    public unsafe int GetAll(out List<StoredCredential> credentials)
     {
         credentials = [];
 
-        int hr = WebAuthnNative.WebAuthNPluginAuthenticatorGetAllCredentials(
-            PluginConstants.PluginClsid,
+        Guid clsid = PluginConstants.PluginClsid;
+        int hr = PInvoke.WebAuthNPluginAuthenticatorGetAllCredentials(
+            in clsid,
             out uint count,
-            out nint arrayPtr);
+            out WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS* arrayPtr);
         if (hr == PluginConstants.HResultErrorFileNotFound)
         {
             // No cached credentials is a success with an empty list.
@@ -32,29 +38,27 @@ public sealed class SystemCredentialCache
 
         try
         {
-            int structSize = Marshal.SizeOf<WebAuthnPluginCredentialDetails>();
             for (uint i = 0; i < count; i++)
             {
-                var native = Marshal.PtrToStructure<WebAuthnPluginCredentialDetails>(
-                    arrayPtr + (nint)(i * (uint)structSize));
+                WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS native = arrayPtr[i];
 
                 // Skip invalid entries, mirroring the C++ sample validation.
-                if (native.PbCredentialId == 0 || native.CbCredentialId == 0 ||
-                    native.PbUserId == 0 || native.CbUserId == 0 ||
-                    native.PwszRpId == 0 || native.PwszRpName == 0 ||
-                    native.PwszUserName == 0 || native.PwszUserDisplayName == 0)
+                if (native.pbCredentialId == null || native.cbCredentialId == 0 ||
+                    native.pbUserId == null || native.cbUserId == 0 ||
+                    native.pwszRpId.Value == null || native.pwszRpName.Value == null ||
+                    native.pwszUserName.Value == null || native.pwszUserDisplayName.Value == null)
                 {
                     continue;
                 }
 
                 credentials.Add(new StoredCredential
                 {
-                    CredentialId = CopyBytes(native.PbCredentialId, native.CbCredentialId),
-                    UserId = CopyBytes(native.PbUserId, native.CbUserId),
-                    RpId = Marshal.PtrToStringUni(native.PwszRpId) ?? string.Empty,
-                    RpName = Marshal.PtrToStringUni(native.PwszRpName) ?? string.Empty,
-                    UserName = Marshal.PtrToStringUni(native.PwszUserName) ?? string.Empty,
-                    DisplayName = Marshal.PtrToStringUni(native.PwszUserDisplayName) ?? string.Empty,
+                    CredentialId = CopyBytes(native.pbCredentialId, native.cbCredentialId),
+                    UserId = CopyBytes(native.pbUserId, native.cbUserId),
+                    RpId = native.pwszRpId.ToString() ?? string.Empty,
+                    RpName = native.pwszRpName.ToString() ?? string.Empty,
+                    UserName = native.pwszUserName.ToString() ?? string.Empty,
+                    DisplayName = native.pwszUserDisplayName.ToString() ?? string.Empty,
                     KeyName = string.Empty,
                     CreatedAt = DateTimeOffset.Now,
                 });
@@ -65,32 +69,31 @@ public sealed class SystemCredentialCache
         finally
         {
             // Single unified free for the whole returned array.
-            WebAuthnNative.WebAuthNPluginAuthenticatorFreeCredentialDetailsArray(count, arrayPtr);
+            PInvoke.WebAuthNPluginAuthenticatorFreeCredentialDetailsArray(count, arrayPtr);
         }
     }
 
-    public int Add(IEnumerable<StoredCredential> credentials)
+    public unsafe int Add(IEnumerable<StoredCredential> credentials) => InvokeWithNativeArray(credentials, AddNative);
+
+    public unsafe int Remove(IEnumerable<StoredCredential> credentials) => InvokeWithNativeArray(credentials, RemoveNative);
+
+    private static unsafe int AddNative(in Guid clsid, uint count, WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS* details) =>
+        PInvoke.WebAuthNPluginAuthenticatorAddCredentials(in clsid, new ReadOnlySpan<WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS>(details, (int)count));
+
+    private static unsafe int RemoveNative(in Guid clsid, uint count, WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS* details) =>
+        PInvoke.WebAuthNPluginAuthenticatorRemoveCredentials(in clsid, new ReadOnlySpan<WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS>(details, (int)count));
+
+    public unsafe int RemoveAll()
     {
-        return InvokeWithNativeArray(
-            credentials,
-            (clsid, count, ptr) => WebAuthnNative.WebAuthNPluginAuthenticatorAddCredentials(in clsid, count, ptr));
+        Guid clsid = PluginConstants.PluginClsid;
+        return PInvoke.WebAuthNPluginAuthenticatorRemoveAllCredentials(in clsid);
     }
 
-    public int Remove(IEnumerable<StoredCredential> credentials)
-    {
-        return InvokeWithNativeArray(
-            credentials,
-            (clsid, count, ptr) => WebAuthnNative.WebAuthNPluginAuthenticatorRemoveCredentials(in clsid, count, ptr));
-    }
+    private unsafe delegate int NativeArrayInvoker(in Guid clsid, uint count, WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS* details);
 
-    public int RemoveAll()
-    {
-        return WebAuthnNative.WebAuthNPluginAuthenticatorRemoveAllCredentials(PluginConstants.PluginClsid);
-    }
-
-    private static int InvokeWithNativeArray(
+    private static unsafe int InvokeWithNativeArray(
         IEnumerable<StoredCredential> credentials,
-        Func<Guid, uint, nint, int> invoke)
+        NativeArrayInvoker invoke)
     {
         ArgumentNullException.ThrowIfNull(credentials);
         ArgumentNullException.ThrowIfNull(invoke);
@@ -101,7 +104,7 @@ public sealed class SystemCredentialCache
             return PluginConstants.S_OK;
         }
 
-        int structSize = Marshal.SizeOf<WebAuthnPluginCredentialDetails>();
+        int structSize = sizeof(WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS);
 
         // Single unmanaged block: contiguous struct array followed by all
         // byte/wchar payload. The whole block stays valid for the call.
@@ -115,23 +118,21 @@ public sealed class SystemCredentialCache
             for (int i = 0; i < list.Count; i++)
             {
                 var cred = list[i];
-
-                var native = new WebAuthnPluginCredentialDetails
+                var native = (WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS*)(block + i * structSize);
+                *native = new WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS
                 {
-                    CbCredentialId = (uint)cred.CredentialId.Length,
-                    PbCredentialId = WriteBytes(ref payload, cred.CredentialId),
-                    PwszRpId = WriteString(ref payload, cred.RpId),
-                    PwszRpName = WriteString(ref payload, cred.RpName),
-                    CbUserId = (uint)cred.UserId.Length,
-                    PbUserId = WriteBytes(ref payload, cred.UserId),
-                    PwszUserName = WriteString(ref payload, cred.UserName),
-                    PwszUserDisplayName = WriteString(ref payload, cred.DisplayName),
+                    cbCredentialId = (uint)cred.CredentialId.Length,
+                    pbCredentialId = WriteBytes(ref payload, cred.CredentialId),
+                    pwszRpId = WriteString(ref payload, cred.RpId),
+                    pwszRpName = WriteString(ref payload, cred.RpName),
+                    cbUserId = (uint)cred.UserId.Length,
+                    pbUserId = WriteBytes(ref payload, cred.UserId),
+                    pwszUserName = WriteString(ref payload, cred.UserName),
+                    pwszUserDisplayName = WriteString(ref payload, cred.DisplayName),
                 };
-
-                Marshal.StructureToPtr(native, block + i * structSize, false);
             }
 
-            return invoke(PluginConstants.PluginClsid, (uint)list.Count, block);
+            return invoke(PluginConstants.PluginClsid, (uint)list.Count, (WEBAUTHN_PLUGIN_CREDENTIAL_DETAILS*)block);
         }
         finally
         {
@@ -159,31 +160,31 @@ public sealed class SystemCredentialCache
 
     private static int StringByteSize(string value) => (value.Length + 1) * sizeof(char);
 
-    private static nint WriteBytes(ref nint payload, byte[] data)
+    private static unsafe byte* WriteBytes(ref nint payload, byte[] data)
     {
         if (data.Length == 0)
         {
-            return 0;
+            return null;
         }
 
         nint dest = payload;
         Marshal.Copy(data, 0, dest, data.Length);
         payload += data.Length;
-        return dest;
+        return (byte*)dest;
     }
 
-    private static nint WriteString(ref nint payload, string value)
+    private static unsafe Windows.Win32.Foundation.PCWSTR WriteString(ref nint payload, string value)
     {
         nint dest = payload;
         Marshal.Copy((value + '\0').ToCharArray(), 0, dest, value.Length + 1);
         payload += (value.Length + 1) * sizeof(char);
-        return dest;
+        return (char*)dest;
     }
 
-    private static byte[] CopyBytes(nint src, uint count)
+    private static unsafe byte[] CopyBytes(byte* src, uint count)
     {
         var bytes = new byte[count];
-        Marshal.Copy(src, bytes, 0, (int)count);
+        Marshal.Copy((nint)src, bytes, 0, (int)count);
         return bytes;
     }
 }

@@ -1,3 +1,6 @@
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.Security.Authentication.WebAuthn;
 using PasskeyManager.Interop;
 using PasskeyManager.Models;
 using System.Runtime.InteropServices;
@@ -21,33 +24,44 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
     private const int NteUserCancelled = unchecked((int)0x80090036);
     private static int _operationInProgress;
 
-    public int MakeCredential(nint requestPointer, nint responsePointer)
+    public unsafe WEBAUTHN_PLUGIN_OPERATION_RESPONSE MakeCredential(WEBAUTHN_PLUGIN_OPERATION_REQUEST* requestPointer)
     {
-        return RunOperation(requestPointer, responsePointer, MakeCredentialCore);
-    }
-
-    public int GetAssertion(nint requestPointer, nint responsePointer)
-    {
-        return RunOperation(requestPointer, responsePointer, GetAssertionCore);
-    }
-
-    public int CancelOperation(nint requestPointer)
-    {
-        if (requestPointer == nint.Zero)
+        var response = new WEBAUTHN_PLUGIN_OPERATION_RESPONSE();
+        var hresult = RunOperation((nint)requestPointer, (nint)(&response), MakeCredentialCore);
+        if (hresult < 0)
         {
-            return InvalidArgument;
+            throw new COMException($"MakeCredential failed with HRESULT 0x{hresult:X8}", hresult);
         }
-        var request = Marshal.PtrToStructure<WebAuthnPluginCancelOperationRequest>(requestPointer);
-        return PluginOperationCoordinator.Cancel(request.TransactionId) ? 0 : NteNotFound;
+        return response;
     }
 
-    public int GetLockStatus(out int lockStatus)
+    public unsafe WEBAUTHN_PLUGIN_OPERATION_RESPONSE GetAssertion(WEBAUTHN_PLUGIN_OPERATION_REQUEST* requestPointer)
     {
-        lockStatus = PluginSettings.IsVaultLocked()
-            ? (int)PluginLockStatus.PluginLocked
-            : (int)PluginLockStatus.PluginUnlocked;
-        return 0;
+        var response = new WEBAUTHN_PLUGIN_OPERATION_RESPONSE();
+        var hresult = RunOperation((nint)requestPointer, (nint)(&response), GetAssertionCore);
+        if (hresult < 0)
+        {
+            throw new COMException($"GetAssertion failed with HRESULT 0x{hresult:X8}", hresult);
+        }
+        return response;
     }
+
+    public unsafe void CancelOperation(WEBAUTHN_PLUGIN_CANCEL_OPERATION_REQUEST* requestPointer)
+    {
+        if (requestPointer is null)
+        {
+            throw new COMException("Request pointer is null.", InvalidArgument);
+        }
+        var request = Marshal.PtrToStructure<WEBAUTHN_PLUGIN_CANCEL_OPERATION_REQUEST>((nint)requestPointer);
+        var hresult = PluginOperationCoordinator.Cancel(request.transactionId) ? 0 : NteNotFound;
+        if (hresult < 0)
+        {
+            throw new COMException($"CancelOperation failed with HRESULT 0x{hresult:X8}", hresult);
+        }
+    }
+
+    public PLUGIN_LOCK_STATUS GetLockStatus() =>
+        PluginSettings.IsVaultLocked() ? PLUGIN_LOCK_STATUS.PluginLocked : PLUGIN_LOCK_STATUS.PluginUnlocked;
 
     private static int RunOperation(
         nint requestPointer,
@@ -59,7 +73,7 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             return InvalidArgument;
         }
 
-        Marshal.StructureToPtr(new WebAuthnPluginOperationResponse(), responsePointer, false);
+        Marshal.StructureToPtr(new WEBAUTHN_PLUGIN_OPERATION_RESPONSE(), responsePointer, false);
         if (Interlocked.CompareExchange(ref _operationInProgress, 1, 0) != 0)
         {
             return ErrorBusy;
@@ -91,30 +105,29 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
 
     private static unsafe int MakeCredentialCore(nint requestPointer, nint responsePointer)
     {
-        var request = Marshal.PtrToStructure<WebAuthnPluginOperationRequest>(requestPointer);
+        var request = Marshal.PtrToStructure<WEBAUTHN_PLUGIN_OPERATION_REQUEST>(requestPointer);
         PluginLog.Add(AppStrings.Get("LogMakeCredentialCallback"), "Info");
         ValidateRequest(request);
-        var requestBytes = CopyBytes(request.PbEncodedRequest, request.CbEncodedRequest);
+        var requestBytes = CopyBytes(request.pbEncodedRequest, request.cbEncodedRequest);
         VerifyPlatformRequest(request, requestBytes);
 
-        Check(WebAuthnNative.WebAuthNDecodeMakeCredentialRequest(
-            request.CbEncodedRequest,
-            request.PbEncodedRequest,
-            out nint decodedPointer));
+        Check(PInvoke.WebAuthNDecodeMakeCredentialRequest(
+            requestBytes,
+            out WEBAUTHN_CTAPCBOR_MAKE_CREDENTIAL_REQUEST* decodedPointer));
         try
         {
-            var decoded = Marshal.PtrToStructure<WebAuthnCtapCborMakeCredentialRequest>(decodedPointer);
-            if (decoded.PRpInformation == nint.Zero || decoded.PUserInformation == nint.Zero)
+            var decoded = Marshal.PtrToStructure<WEBAUTHN_CTAPCBOR_MAKE_CREDENTIAL_REQUEST>((nint)decodedPointer);
+            if (decoded.pRpInformation is null || decoded.pUserInformation is null)
             {
                 return Unexpected;
             }
-            var rp = Marshal.PtrToStructure<WebAuthnRpEntityInformation>(decoded.PRpInformation);
-            var user = Marshal.PtrToStructure<WebAuthnUserEntityInformation>(decoded.PUserInformation);
-            var rpId = Marshal.PtrToStringUni(rp.PwszId) ?? throw new HResultException(InvalidArgument);
-            var rpName = Marshal.PtrToStringUni(rp.PwszName) ?? rpId;
-            var userName = Marshal.PtrToStringUni(user.PwszName) ?? string.Empty;
-            var displayName = Marshal.PtrToStringUni(user.PwszDisplayName) ?? userName;
-            var userId = CopyBytes(user.PbId, user.CbId);
+            var rp = Marshal.PtrToStructure<WEBAUTHN_RP_ENTITY_INFORMATION>((nint)decoded.pRpInformation);
+            var user = Marshal.PtrToStructure<WEBAUTHN_USER_ENTITY_INFORMATION>((nint)decoded.pUserInformation);
+            var rpId = rp.pwszId.ToString() ?? throw new HResultException(InvalidArgument);
+            var rpName = rp.pwszName.ToString() ?? rpId;
+            var userName = user.pwszName.ToString() ?? string.Empty;
+            var displayName = user.pwszDisplayName.ToString() ?? userName;
+            var userId = CopyBytes(user.pbId, user.cbId);
             if (userId.Length is 0 or > 64)
             {
                 return InvalidArgument;
@@ -125,8 +138,8 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             }
 
             var decision = PluginOperationCoordinator.ConfirmMakeCredentialAsync(
-                request.TransactionId,
-                request.HWnd,
+                request.transactionId,
+                request.hWnd,
                 rpId,
                 rpName,
                 userName).GetAwaiter().GetResult();
@@ -139,7 +152,7 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
                 PerformUserVerification(request, requestBytes, userName);
             }
 
-            var rpIdBytes = CopyBytes(decoded.PbRpId, decoded.CbRpId);
+            var rpIdBytes = CopyBytes(decoded.pbRpId, decoded.cbRpId);
             var keyName = WebAuthnCrypto.CreateKeyName();
             using var key = WebAuthnCrypto.CreateKey(keyName);
             var authenticatorData = WebAuthnCrypto.CreateAuthenticatorData(
@@ -148,21 +161,21 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
                 rpIdBytes,
                 out var credentialId);
 
-            nint encodedResponse;
+            byte* encodedResponse;
             uint encodedResponseLength;
-            var format = Marshal.StringToCoTaskMemUni("none");
+            var format = (char*)Marshal.StringToCoTaskMemUni("none");
             try
             {
                 fixed (byte* authenticatorDataPointer = authenticatorData)
                 {
-                    var attestation = new WebAuthnCredentialAttestation
+                    var attestation = new WEBAUTHN_CREDENTIAL_ATTESTATION
                     {
-                        DwVersion = 8,
-                        PwszFormatType = format,
-                        CbAuthenticatorData = (uint)authenticatorData.Length,
-                        PbAuthenticatorData = (nint)authenticatorDataPointer
+                        dwVersion = 8,
+                        pwszFormatType = format,
+                        cbAuthenticatorData = (uint)authenticatorData.Length,
+                        pbAuthenticatorData = authenticatorDataPointer
                     };
-                    Check(WebAuthnNative.WebAuthNEncodeMakeCredentialResponse(
+                    Check(PInvoke.WebAuthNEncodeMakeCredentialResponse(
                         attestation,
                         out encodedResponseLength,
                         out encodedResponse));
@@ -170,7 +183,7 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             }
             finally
             {
-                Marshal.FreeCoTaskMem(format);
+                Marshal.FreeCoTaskMem((nint)format);
             }
 
             var stored = new StoredCredential
@@ -191,7 +204,7 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             catch
             {
                 WebAuthnCrypto.DeleteKey(keyName);
-                Marshal.FreeCoTaskMem(encodedResponse);
+                Marshal.FreeCoTaskMem((nint)encodedResponse);
                 throw;
             }
 
@@ -202,35 +215,34 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
                     : AppStrings.Format("LogCredentialCacheFailedFormat", cacheHResult),
                 cacheHResult >= 0 ? "Success" : "Warning",
                 cacheHResult);
-            Marshal.StructureToPtr(new WebAuthnPluginOperationResponse
+            Marshal.StructureToPtr(new WEBAUTHN_PLUGIN_OPERATION_RESPONSE
             {
-                CbEncodedResponse = encodedResponseLength,
-                PbEncodedResponse = encodedResponse
+                cbEncodedResponse = encodedResponseLength,
+                pbEncodedResponse = encodedResponse
             }, responsePointer, false);
             return 0;
         }
         finally
         {
-            WebAuthnNative.WebAuthNFreeDecodedMakeCredentialRequest(decodedPointer);
+            PInvoke.WebAuthNFreeDecodedMakeCredentialRequest(decodedPointer);
         }
     }
 
     private static unsafe int GetAssertionCore(nint requestPointer, nint responsePointer)
     {
-        var request = Marshal.PtrToStructure<WebAuthnPluginOperationRequest>(requestPointer);
+        var request = Marshal.PtrToStructure<WEBAUTHN_PLUGIN_OPERATION_REQUEST>(requestPointer);
         PluginLog.Add(AppStrings.Get("LogGetAssertionCallback"), "Info");
         ValidateRequest(request);
-        var requestBytes = CopyBytes(request.PbEncodedRequest, request.CbEncodedRequest);
+        var requestBytes = CopyBytes(request.pbEncodedRequest, request.cbEncodedRequest);
         VerifyPlatformRequest(request, requestBytes);
 
-        Check(WebAuthnNative.WebAuthNDecodeGetAssertionRequest(
-            request.CbEncodedRequest,
-            request.PbEncodedRequest,
-            out nint decodedPointer));
+        Check(PInvoke.WebAuthNDecodeGetAssertionRequest(
+            requestBytes,
+            out WEBAUTHN_CTAPCBOR_GET_ASSERTION_REQUEST* decodedPointer));
         try
         {
-            var decoded = Marshal.PtrToStructure<WebAuthnCtapCborGetAssertionRequest>(decodedPointer);
-            var rpId = Marshal.PtrToStringUni(decoded.PwszRpId) ?? throw new HResultException(InvalidArgument);
+            var decoded = Marshal.PtrToStructure<WEBAUTHN_CTAPCBOR_GET_ASSERTION_REQUEST>((nint)decodedPointer);
+            var rpId = decoded.pwszRpId.ToString() ?? throw new HResultException(InvalidArgument);
             var allowList = ReadAllowList(decoded.CredentialList);
             CredentialStore.Shared.Reload();
             var matches = CredentialStore.Shared.FindMatching(rpId, allowList);
@@ -240,8 +252,8 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             }
 
             var decision = PluginOperationCoordinator.ConfirmGetAssertionAsync(
-                request.TransactionId,
-                request.HWnd,
+                request.transactionId,
+                request.hWnd,
                 rpId,
                 matches).GetAwaiter().GetResult();
             if (!decision.Confirmed || decision.Credential is null)
@@ -254,8 +266,8 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
                 PerformUserVerification(request, requestBytes, selected.UserName);
             }
 
-            var rpIdBytes = CopyBytes(decoded.PbRpId, decoded.CbRpId);
-            var clientDataHash = CopyBytes(decoded.PbClientDataHash, decoded.CbClientDataHash);
+            var rpIdBytes = CopyBytes(decoded.pbRpId, decoded.cbRpId);
+            var clientDataHash = CopyBytes(decoded.pbClientDataHash, decoded.cbClientDataHash);
             using var key = WebAuthnCrypto.OpenKey(selected.KeyName);
             var authenticatorData = WebAuthnCrypto.CreateAuthenticatorData(
                 key,
@@ -268,9 +280,9 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             }
             var signature = WebAuthnCrypto.SignAssertion(key, authenticatorData, clientDataHash);
 
-            nint encodedResponse;
+            byte* encodedResponse;
             uint encodedResponseLength;
-            var credentialType = Marshal.StringToCoTaskMemUni(PluginConstants.CredentialTypePublicKey);
+            var credentialType = (char*)Marshal.StringToCoTaskMemUni(PluginConstants.CredentialTypePublicKey);
             try
             {
                 fixed (byte* authDataPointer = authenticatorData)
@@ -278,36 +290,36 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
                 fixed (byte* credentialIdPointer = selected.CredentialId)
                 fixed (byte* userIdPointer = selected.UserId)
                 {
-                    var userEntity = new WebAuthnUserEntityInformation
+                    var userEntity = new WEBAUTHN_USER_ENTITY_INFORMATION
                     {
-                        DwVersion = 1,
-                        CbId = (uint)selected.UserId.Length,
-                        PbId = (nint)userIdPointer
+                        dwVersion = 1,
+                        cbId = (uint)selected.UserId.Length,
+                        pbId = userIdPointer
                     };
-                    var assertion = new WebAuthnAssertion
+                    var assertion = new WEBAUTHN_ASSERTION
                     {
-                        DwVersion = 6,
-                        CbAuthenticatorData = (uint)authenticatorData.Length,
-                        PbAuthenticatorData = (nint)authDataPointer,
-                        CbSignature = (uint)signature.Length,
-                        PbSignature = (nint)signaturePointer,
-                        Credential = new WebAuthnCredential
+                        dwVersion = 6,
+                        cbAuthenticatorData = (uint)authenticatorData.Length,
+                        pbAuthenticatorData = authDataPointer,
+                        cbSignature = (uint)signature.Length,
+                        pbSignature = signaturePointer,
+                        Credential = new WEBAUTHN_CREDENTIAL
                         {
-                            DwVersion = 1,
-                            CbId = (uint)selected.CredentialId.Length,
-                            PbId = (nint)credentialIdPointer,
-                            PwszCredentialType = credentialType
+                            dwVersion = 1,
+                            cbId = (uint)selected.CredentialId.Length,
+                            pbId = credentialIdPointer,
+                            pwszCredentialType = credentialType
                         },
-                        CbUserId = (uint)selected.UserId.Length,
-                        PbUserId = (nint)userIdPointer
+                        cbUserId = (uint)selected.UserId.Length,
+                        pbUserId = userIdPointer
                     };
-                    var ctapResponse = new WebAuthnCtapCborGetAssertionResponse
+                    var ctapResponse = new WEBAUTHN_CTAPCBOR_GET_ASSERTION_RESPONSE
                     {
                         WebAuthNAssertion = assertion,
-                        PUserInformation = (nint)(&userEntity),
-                        DwNumberOfCredentials = 1
+                        pUserInformation = &userEntity,
+                        dwNumberOfCredentials = 1
                     };
-                    Check(WebAuthnNative.WebAuthNEncodeGetAssertionResponse(
+                    Check(PInvoke.WebAuthNEncodeGetAssertionResponse(
                         ctapResponse,
                         out encodedResponseLength,
                         out encodedResponse));
@@ -315,44 +327,44 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             }
             finally
             {
-                Marshal.FreeCoTaskMem(credentialType);
+                Marshal.FreeCoTaskMem((nint)credentialType);
             }
 
-            Marshal.StructureToPtr(new WebAuthnPluginOperationResponse
+            Marshal.StructureToPtr(new WEBAUTHN_PLUGIN_OPERATION_RESPONSE
             {
-                CbEncodedResponse = encodedResponseLength,
-                PbEncodedResponse = encodedResponse
+                cbEncodedResponse = encodedResponseLength,
+                pbEncodedResponse = encodedResponse
             }, responsePointer, false);
             PluginLog.Add(AppStrings.Format("LogAssertionCreatedFormat", selected.RpName), "Success");
             return 0;
         }
         finally
         {
-            WebAuthnNative.WebAuthNFreeDecodedGetAssertionRequest(decodedPointer);
+            PInvoke.WebAuthNFreeDecodedGetAssertionRequest(decodedPointer);
         }
     }
 
-    private static void ValidateRequest(WebAuthnPluginOperationRequest request)
+    private static unsafe void ValidateRequest(WEBAUTHN_PLUGIN_OPERATION_REQUEST request)
     {
-        if (request.RequestType != (int)WebAuthnPluginRequestType.Ctap2Cbor
-            || request.PbEncodedRequest == nint.Zero
-            || request.CbEncodedRequest == 0)
+        if (request.requestType != WEBAUTHN_PLUGIN_REQUEST_TYPE.WEBAUTHN_PLUGIN_REQUEST_TYPE_CTAP2_CBOR
+            || request.pbEncodedRequest is null
+            || request.cbEncodedRequest == 0)
         {
             throw new HResultException(InvalidArgument);
         }
     }
 
-    private static void VerifyPlatformRequest(WebAuthnPluginOperationRequest request, byte[] requestBytes)
+    private static unsafe void VerifyPlatformRequest(WEBAUTHN_PLUGIN_OPERATION_REQUEST request, byte[] requestBytes)
     {
         var clsid = PluginConstants.PluginClsid;
-        Check(WebAuthnNative.WebAuthNPluginGetOperationSigningPublicKey(
+        Check(PInvoke.WebAuthNPluginGetOperationSigningPublicKey(
             clsid,
             out uint keyLength,
-            out nint keyPointer));
+            out byte* keyPointer));
         try
         {
             var publicKey = CopyBytes(keyPointer, keyLength);
-            var signature = CopyBytes(request.PbRequestSignature, request.CbRequestSignature);
+            var signature = CopyBytes(request.pbRequestSignature, request.cbRequestSignature);
             if (!WebAuthnCrypto.VerifySignature(requestBytes, publicKey, signature))
             {
                 PluginLog.Add(AppStrings.Format("LogPlatformSignatureFailed", publicKey.Length, ReadMagic(publicKey)), "Error", NteBadSignature);
@@ -362,43 +374,43 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
         }
         finally
         {
-            if (keyPointer != nint.Zero)
+            if (keyPointer is not null)
             {
-                WebAuthnNative.WebAuthNPluginFreePublicKeyResponse(keyPointer);
+                PInvoke.WebAuthNPluginFreePublicKeyResponse(keyPointer);
             }
         }
     }
 
-    private static void PerformUserVerification(
-        WebAuthnPluginOperationRequest operationRequest,
+    private static unsafe void PerformUserVerification(
+        WEBAUTHN_PLUGIN_OPERATION_REQUEST operationRequest,
         byte[] encodedRequest,
         string userName)
     {
         var clsid = PluginConstants.PluginClsid;
-        Check(WebAuthnNative.WebAuthNPluginGetUserVerificationCount(clsid, out _));
-        Check(WebAuthnNative.WebAuthNPluginGetUserVerificationPublicKey(
+        Check(PInvoke.WebAuthNPluginGetUserVerificationCount(clsid, out _));
+        Check(PInvoke.WebAuthNPluginGetUserVerificationPublicKey(
             clsid,
             out uint publicKeyLength,
-            out nint publicKeyPointer));
+            out byte* publicKeyPointer));
         try
         {
-            var transactionId = operationRequest.TransactionId;
-            var transactionPointer = Marshal.AllocHGlobal(Marshal.SizeOf<Guid>());
-            var userNamePointer = Marshal.StringToCoTaskMemUni(userName);
-            var hintPointer = Marshal.StringToCoTaskMemUni("CSharp Passkey Manager");
-            nint responsePointer = nint.Zero;
+            var transactionId = operationRequest.transactionId;
+            var transactionPointer = (Guid*)Marshal.AllocHGlobal(Marshal.SizeOf<Guid>());
+            var userNamePointer = (char*)Marshal.StringToCoTaskMemUni(userName);
+            var hintPointer = (char*)Marshal.StringToCoTaskMemUni("CSharp Passkey Manager");
+            byte* responsePointer = null;
             try
             {
-                Marshal.StructureToPtr(transactionId, transactionPointer, false);
+                Marshal.StructureToPtr(transactionId, (nint)transactionPointer, false);
                 var pluginWindow = PluginOperationCoordinator.WindowHandle;
-                var uvRequest = new WebAuthnPluginUserVerificationRequest
+                var uvRequest = new WEBAUTHN_PLUGIN_USER_VERIFICATION_REQUEST
                 {
-                    HWnd = pluginWindow != nint.Zero ? pluginWindow : operationRequest.HWnd,
-                    RguidTransactionId = transactionPointer,
-                    PwszUsername = userNamePointer,
-                    PwszDisplayHint = hintPointer
+                    hwnd = pluginWindow != nint.Zero ? (HWND)pluginWindow : operationRequest.hWnd,
+                    rguidTransactionId = transactionPointer,
+                    pwszUsername = userNamePointer,
+                    pwszDisplayHint = hintPointer
                 };
-                Check(WebAuthnNative.WebAuthNPluginPerformUserVerification(
+                Check(PInvoke.WebAuthNPluginPerformUserVerification(
                     uvRequest,
                     out uint responseLength,
                     out responsePointer));
@@ -412,20 +424,20 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
             }
             finally
             {
-                if (responsePointer != nint.Zero)
+                if (responsePointer is not null)
                 {
-                    WebAuthnNative.WebAuthNPluginFreeUserVerificationResponse(responsePointer);
+                    PInvoke.WebAuthNPluginFreeUserVerificationResponse(responsePointer);
                 }
-                Marshal.FreeHGlobal(transactionPointer);
-                Marshal.FreeCoTaskMem(userNamePointer);
-                Marshal.FreeCoTaskMem(hintPointer);
+                Marshal.FreeHGlobal((nint)transactionPointer);
+                Marshal.FreeCoTaskMem((nint)userNamePointer);
+                Marshal.FreeCoTaskMem((nint)hintPointer);
             }
         }
         finally
         {
-            if (publicKeyPointer != nint.Zero)
+            if (publicKeyPointer is not null)
             {
-                WebAuthnNative.WebAuthNPluginFreePublicKeyResponse(publicKeyPointer);
+                PInvoke.WebAuthNPluginFreePublicKeyResponse(publicKeyPointer);
             }
         }
     }
@@ -433,41 +445,41 @@ internal sealed class PluginAuthenticator : IPluginAuthenticator
     private static uint ReadMagic(byte[] publicKey) =>
         publicKey.Length >= 4 ? BitConverter.ToUInt32(publicKey, 0) : 0;
 
-    private static List<byte[]> ReadAllowList(WebAuthnCredentialList list)
+    private static unsafe List<byte[]> ReadAllowList(WEBAUTHN_CREDENTIAL_LIST list)
     {
         var result = new List<byte[]>();
-        if (list.CCredentials == 0 || list.PpCredentials == nint.Zero)
+        if (list.cCredentials == 0 || list.ppCredentials is null)
         {
             return result;
         }
-        for (uint index = 0; index < list.CCredentials; index++)
+        for (uint index = 0; index < list.cCredentials; index++)
         {
-            var pointer = Marshal.ReadIntPtr(list.PpCredentials + (nint)(index * (uint)nint.Size));
-            if (pointer == nint.Zero)
+            var pointer = list.ppCredentials[index];
+            if (pointer is null)
             {
                 continue;
             }
-            var credential = Marshal.PtrToStructure<WebAuthnCredentialEx>(pointer);
-            if (credential.PbId != nint.Zero && credential.CbId > 0)
+            var credential = Marshal.PtrToStructure<WEBAUTHN_CREDENTIAL_EX>((nint)pointer);
+            if (credential.pbId is not null && credential.cbId > 0)
             {
-                result.Add(CopyBytes(credential.PbId, credential.CbId));
+                result.Add(CopyBytes(credential.pbId, credential.cbId));
             }
         }
         return result;
     }
 
-    private static byte[] CopyBytes(nint pointer, uint length)
+    private static unsafe byte[] CopyBytes(byte* pointer, uint length)
     {
         if (length == 0)
         {
             return [];
         }
-        if (pointer == nint.Zero || length > 1024 * 1024)
+        if (pointer is null || length > 1024 * 1024)
         {
             throw new HResultException(InvalidArgument);
         }
         var result = new byte[length];
-        Marshal.Copy(pointer, result, 0, checked((int)length));
+        Marshal.Copy((nint)pointer, result, 0, checked((int)length));
         return result;
     }
 

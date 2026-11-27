@@ -16,6 +16,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DefaultLanguage>en-US</DefaultLanguage>
+    <CsWin32PlatformTarget>$(Platform)</CsWin32PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
@@ -60,6 +61,13 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.7.0" />
+    <!-- CsWin32 source generator: produces Windows.Win32.PInvoke and
+         Windows.Win32.Security.Authentication.WebAuthn bindings from
+         NativeMethods.txt / NativeMethods.json. -->
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.371">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.8.0" />
   </ItemGroup>

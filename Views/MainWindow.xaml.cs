@@ -1,8 +1,9 @@
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using System.Runtime.InteropServices;
 using Windows.Graphics;
+using Windows.Win32;
+using Windows.Win32.Foundation;
 
 namespace PasskeyManager.Views;
 
@@ -16,8 +17,6 @@ public sealed partial class MainWindow : Window
     private const int MinimumWidthDip = 720;
     private const int MinimumHeightDip = 560;
 
-    [DllImport("user32.dll")]
-    private static extern uint GetDpiForWindow(nint hWnd);
 
     public MainWindow()
     {
@@ -29,7 +28,7 @@ public sealed partial class MainWindow : Window
 
         // AppWindow dimensions use physical pixels rather than device-independent pixels.
         var hwnd = Win32Interop.GetWindowFromWindowId(AppWindow.Id);
-        var scale = GetDpiForWindow(hwnd) / 96.0;
+        var scale = PInvoke.GetDpiForWindow((HWND)hwnd) / 96.0;
         AppWindow.Resize(new SizeInt32(
             (int)(DefaultWidthDip * scale),
             (int)(DefaultHeightDip * scale)));

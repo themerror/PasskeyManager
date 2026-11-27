@@ -15,6 +15,7 @@
   - `CancelOperation`
   - `GetLockStatus`
 - `WebAuthNPluginAddAuthenticator` / `UpdateAuthenticatorDetails` / `RemoveAuthenticator` / `GetAuthenticatorState`。
+- 使用 `Microsoft.Windows.CsWin32 0.3.371` 从官方 win32metadata 生成 WebAuthn、COM 和 OLE32 互操作声明，不手写 `DllImport` 或原生结构布局。
 - 使用 Windows 官方 `WebAuthNDecode*` 解析请求、`WebAuthNEncode*` 编码响应。
 - 强制验证平台请求签名与 `WebAuthNPluginPerformUserVerification` 的 UV 响应签名；失败即中止。
 - Windows Hello 插件用户验证，以及锁定保险库时的真实 Hello 解锁。
@@ -81,12 +82,12 @@ winapp run . --detach --json
 
 ```text
 Program.cs                       STA、COM 安全与 WinUI 启动
+NativeMethods.txt              CsWin32 生成的 API/结构清单
+NativeMethods.json             CsWin32 生成配置与目标架构
 App.xaml.cs                      交互模式 / -PluginActivated 后台模式
 Interop/
-  IPluginAuthenticator.cs        COM IID 与 vtable 契约
   PluginConstants.cs             CLSID、AAGUID、插件 RP ID
-  WebAuthnTypes.cs               官方结构体的 x64 C# 布局
-  WebAuthnNative.cs              webauthn.dll P/Invoke
+  （其他 WebAuthn/COM 类型由 CsWin32 在构建时生成）
 Services/
   PluginComServer.cs             托管 IClassFactory / CoRegisterClassObject
   PluginAuthenticator.cs         MakeCredential / GetAssertion / UV / Cancel
@@ -136,6 +137,7 @@ Models/
 - 用户取消返回 `NTE_USER_CANCELLED (0x80090036)`。
 - 本地元数据与 Windows 自动填充缓存均显示保留的测试凭据。
 - 中英文双向即时切换通过；四个独立页面的导航、资源键和共享 ViewModel 状态正常。
+- 使用 CsWin32 迁移后，webauthn.io 的 MakeCredential 和 GetAssertion 再次通过：生成的 COM 接口、WebAuthn 调用、Hello UV、CNG 签名及网站登录均正常。
 - 生产 RP 判定测试 10/10，通过真实网站、测试站点、回环地址和伪装域名用例。
 - `dotnet build` 与 `dotnet build -c Release`（x64）均为 0 警告、0 错误。
 

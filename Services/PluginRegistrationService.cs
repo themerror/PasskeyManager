@@ -1,6 +1,9 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using PasskeyManager.Interop;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.Security.Authentication.WebAuthn;
 
 namespace PasskeyManager.Services;
 
@@ -8,6 +11,9 @@ namespace PasskeyManager.Services;
 /// Registers / unregisters / updates the plugin authenticator with the Windows
 /// WebAuthN platform and refreshes its registration state. Ported from the
 /// official PasskeyManager C++ sample (PluginRegistrationManager.cpp).
+/// P/Invoke bindings and native types are CsWin32-generated
+/// (Windows.Win32.PInvoke / Windows.Win32.Security.Authentication.WebAuthn,
+/// see NativeMethods.txt).
 /// </summary>
 public sealed class PluginRegistrationService
 {
@@ -23,100 +29,110 @@ public sealed class PluginRegistrationService
     {
         byte[] authenticatorInfo = BuildAuthenticatorInfo();
 
-        var clsid = PluginConstants.PluginClsid;
-        var options = new WebAuthnPluginAddAuthenticatorOptions
+        Guid clsid = PluginConstants.PluginClsid;
+        unsafe
         {
-            PwszAuthenticatorName = Marshal.StringToCoTaskMemUni(PluginConstants.PluginName),
-            Rclsid = Marshal.AllocHGlobal(Marshal.SizeOf<Guid>()),
-            PwszPluginRpId = Marshal.StringToCoTaskMemUni(PluginConstants.PluginRpId),
-            PwszLightThemeLogoSvg = 0, // Logo optional -> null
-            PwszDarkThemeLogoSvg = 0,
-            CbAuthenticatorInfo = (uint)authenticatorInfo.Length,
-            PbAuthenticatorInfo = Marshal.AllocHGlobal(authenticatorInfo.Length),
-            CSupportedRpIds = 0,
-            PpwszSupportedRpIds = 0,
-        };
-
-        nint response = 0;
-        try
-        {
-            Marshal.StructureToPtr(clsid, options.Rclsid, false);
-            Marshal.Copy(authenticatorInfo, 0, options.PbAuthenticatorInfo, authenticatorInfo.Length);
-
-            int hr = WebAuthnNative.WebAuthNPluginAddAuthenticator(options, out response);
-            if (hr != PluginConstants.S_OK)
+            Guid* pClsid = &clsid;
+            var options = new WEBAUTHN_PLUGIN_ADD_AUTHENTICATOR_OPTIONS
             {
-                return hr;
-            }
+                pwszAuthenticatorName = ToNativeString(PluginConstants.PluginName),
+                rclsid = pClsid,
+                pwszPluginRpId = ToNativeString(PluginConstants.PluginRpId),
+                pwszLightThemeLogoSvg = default, // Logo optional -> null
+                pwszDarkThemeLogoSvg = default,
+                cbAuthenticatorInfo = (uint)authenticatorInfo.Length,
+                pbAuthenticatorInfo = null,
+                cSupportedRpIds = 0,
+                ppwszSupportedRpIds = null,
+            };
 
-            // The operation signing public key is intentionally not persisted
-            // to the registry in this implementation; it is owned by the lane
-            // that handles plugin operation signing.
-            return PluginConstants.S_OK;
-        }
-        finally
-        {
-            // Always free the add response and temporary unmanaged memory.
-            if (response != 0)
+            WEBAUTHN_PLUGIN_ADD_AUTHENTICATOR_RESPONSE* response = null;
+            try
             {
-                WebAuthnNative.WebAuthNPluginFreeAddAuthenticatorResponse(response);
-            }
+                options.pbAuthenticatorInfo = (byte*)Marshal.AllocHGlobal(authenticatorInfo.Length);
+                Marshal.Copy(authenticatorInfo, 0, (nint)options.pbAuthenticatorInfo, authenticatorInfo.Length);
 
-            Marshal.FreeHGlobal(options.PwszAuthenticatorName);
-            Marshal.FreeHGlobal(options.Rclsid);
-            Marshal.FreeHGlobal(options.PwszPluginRpId);
-            Marshal.FreeHGlobal(options.PbAuthenticatorInfo);
+                int hr = PInvoke.WebAuthNPluginAddAuthenticator(in options, out response);
+                if (hr != PluginConstants.S_OK)
+                {
+                    return hr;
+                }
+
+                // The operation signing public key is intentionally not persisted
+                // to the registry in this implementation; it is owned by the lane
+                // that handles plugin operation signing.
+                return PluginConstants.S_OK;
+            }
+            finally
+            {
+                // Always free the add response and temporary unmanaged memory.
+                if (response != null)
+                {
+                    PInvoke.WebAuthNPluginFreeAddAuthenticatorResponse(response);
+                }
+
+                Marshal.FreeHGlobal((nint)(char*)options.pwszAuthenticatorName);
+                Marshal.FreeHGlobal((nint)(char*)options.pwszPluginRpId);
+                if (options.pbAuthenticatorInfo != null)
+                {
+                    Marshal.FreeHGlobal((nint)options.pbAuthenticatorInfo);
+                }
+            }
         }
     }
 
     public int Unregister()
     {
-        return WebAuthnNative.WebAuthNPluginRemoveAuthenticator(PluginConstants.PluginClsid);
+        Guid clsid = PluginConstants.PluginClsid;
+        return PInvoke.WebAuthNPluginRemoveAuthenticator(in clsid);
     }
 
     public int Update()
     {
         byte[] authenticatorInfo = BuildAuthenticatorInfo();
 
-        var clsid = PluginConstants.PluginClsid;
-        var updateDetails = new WebAuthnPluginUpdateAuthenticatorDetails
+        Guid clsid = PluginConstants.PluginClsid;
+        unsafe
         {
-            PwszAuthenticatorName = Marshal.StringToCoTaskMemUni(PluginConstants.PluginName),
-            Rclsid = Marshal.AllocHGlobal(Marshal.SizeOf<Guid>()),
-            RclsidNew = Marshal.AllocHGlobal(Marshal.SizeOf<Guid>()),
-            PwszLightThemeLogoSvg = 0, // Logo optional -> null
-            PwszDarkThemeLogoSvg = 0,
-            CbAuthenticatorInfo = (uint)authenticatorInfo.Length,
-            PbAuthenticatorInfo = Marshal.AllocHGlobal(authenticatorInfo.Length),
-            CSupportedRpIds = 0,
-            PpwszSupportedRpIds = 0,
-        };
+            Guid* pClsid = &clsid;
+            var updateDetails = new WEBAUTHN_PLUGIN_UPDATE_AUTHENTICATOR_DETAILS
+            {
+                pwszAuthenticatorName = ToNativeString(PluginConstants.PluginName),
+                rclsid = pClsid,
+                rclsidNew = pClsid,
+                pwszLightThemeLogoSvg = default, // Logo optional -> null
+                pwszDarkThemeLogoSvg = default,
+                cbAuthenticatorInfo = (uint)authenticatorInfo.Length,
+                pbAuthenticatorInfo = null,
+                cSupportedRpIds = 0,
+                ppwszSupportedRpIds = null,
+            };
 
-        try
-        {
-            Marshal.StructureToPtr(clsid, updateDetails.Rclsid, false);
-            Marshal.StructureToPtr(clsid, updateDetails.RclsidNew, false);
-            Marshal.Copy(authenticatorInfo, 0, updateDetails.PbAuthenticatorInfo, authenticatorInfo.Length);
+            try
+            {
+                updateDetails.pbAuthenticatorInfo = (byte*)Marshal.AllocHGlobal(authenticatorInfo.Length);
+                Marshal.Copy(authenticatorInfo, 0, (nint)updateDetails.pbAuthenticatorInfo, authenticatorInfo.Length);
 
-            return WebAuthnNative.WebAuthNPluginUpdateAuthenticatorDetails(updateDetails);
-        }
-        finally
-        {
-            Marshal.FreeHGlobal(updateDetails.PwszAuthenticatorName);
-            Marshal.FreeHGlobal(updateDetails.Rclsid);
-            Marshal.FreeHGlobal(updateDetails.RclsidNew);
-            Marshal.FreeHGlobal(updateDetails.PbAuthenticatorInfo);
+                return PInvoke.WebAuthNPluginUpdateAuthenticatorDetails(in updateDetails);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal((nint)(char*)updateDetails.pwszAuthenticatorName);
+                if (updateDetails.pbAuthenticatorInfo != null)
+                {
+                    Marshal.FreeHGlobal((nint)updateDetails.pbAuthenticatorInfo);
+                }
+            }
         }
     }
 
     public int Refresh(out bool isRegistered, out int state)
     {
         isRegistered = false;
-        state = (int)AuthenticatorState.Disabled;
+        state = (int)AUTHENTICATOR_STATE.AuthenticatorState_Disabled;
 
-        int hr = WebAuthnNative.WebAuthNPluginGetAuthenticatorState(
-            PluginConstants.PluginClsid,
-            out AuthenticatorState pluginState);
+        Guid clsid = PluginConstants.PluginClsid;
+        int hr = PInvoke.WebAuthNPluginGetAuthenticatorState(in clsid, out AUTHENTICATOR_STATE pluginState);
         if (hr != PluginConstants.S_OK)
         {
             return hr;
@@ -126,6 +142,10 @@ public sealed class PluginRegistrationService
         state = (int)pluginState;
         return PluginConstants.S_OK;
     }
+
+    /// <summary>Allocates a CoTaskMem UTF-16 string usable as a PCWSTR field value.</summary>
+    private static unsafe PCWSTR ToNativeString(string value) =>
+        (char*)Marshal.StringToCoTaskMemUni(value);
 
     /// <summary>
     /// Builds the CTAP CBOR authenticatorGetInfo blob:

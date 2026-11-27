@@ -1,27 +1,22 @@
 using PasskeyManager.Interop;
 using System.Runtime.InteropServices;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.Security.Authentication.WebAuthn;
+using Windows.Win32.System.Com;
 
 namespace PasskeyManager.Services;
-
-[ComImport]
-[ComVisible(false)]
-[Guid("00000001-0000-0000-C000-000000000046")]
-[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-internal interface IClassFactory
-{
-    void CreateInstance([MarshalAs(UnmanagedType.Interface)] object? outer, ref Guid iid, out nint instance);
-    void LockServer([MarshalAs(UnmanagedType.Bool)] bool lockServer);
-}
 
 [ComVisible(true)]
 [ClassInterface(ClassInterfaceType.None)]
 internal sealed class PluginClassFactory : IClassFactory
 {
     private static readonly Guid IUnknown = new("00000000-0000-0000-C000-000000000046");
-    private static readonly Guid PluginInterface = new(IPluginAuthenticator.Iid);
+    private static readonly Guid PluginInterface = new("d26bcf6f-b54c-43ff-9f06-d5bf148625f7");
 
-    public void CreateInstance([MarshalAs(UnmanagedType.Interface)] object? outer, ref Guid iid, out nint instance)
+    public unsafe void CreateInstance([MarshalAs(UnmanagedType.IUnknown)] object outer, Guid* iid, out void* instance)
     {
+        instance = null;
         if (outer is not null)
         {
             throw new COMException(string.Empty, unchecked((int)0x80040110));
@@ -29,24 +24,24 @@ internal sealed class PluginClassFactory : IClassFactory
 
         var plugin = new PluginAuthenticator();
         PluginLog.Add(AppStrings.Get("LogComInstanceCreated"), "Info");
-        if (iid == IUnknown)
+        if (*iid == IUnknown)
         {
-            instance = Marshal.GetIUnknownForObject(plugin);
+            instance = (void*)Marshal.GetIUnknownForObject(plugin);
             return;
         }
-        if (iid != PluginInterface)
+        if (*iid != PluginInterface)
         {
             throw new InvalidCastException();
         }
 
-        instance = Marshal.GetComInterfaceForObject(plugin, typeof(IPluginAuthenticator), CustomQueryInterfaceMode.Ignore);
-        if (instance == nint.Zero)
+        instance = (void*)Marshal.GetComInterfaceForObject(plugin, typeof(IPluginAuthenticator), CustomQueryInterfaceMode.Ignore);
+        if (instance == null)
         {
             throw new InvalidCastException();
         }
     }
 
-    public void LockServer([MarshalAs(UnmanagedType.Bool)] bool lockServer)
+    public void LockServer(BOOL fLock)
     {
         // The hidden WinUI window keeps this multiple-use server alive.
     }
@@ -54,11 +49,8 @@ internal sealed class PluginClassFactory : IClassFactory
 
 internal static class PluginComServer
 {
-    private const int ClsctxLocalServer = 0x4;
-    private const int RegclsMultipleUse = 0x1;
-    private const int RegclsSuspended = 0x4;
     private static PluginClassFactory? _factory;
-    private static int _cookie;
+    private static uint _cookie;
 
     public static void Start()
     {
@@ -69,11 +61,11 @@ internal static class PluginComServer
 
         _factory = new PluginClassFactory();
         var clsid = PluginConstants.PluginClsid;
-        var hr = CoRegisterClassObject(
-            ref clsid,
+        var hr = PInvoke.CoRegisterClassObject(
+            clsid,
             _factory,
-            ClsctxLocalServer,
-            RegclsMultipleUse | RegclsSuspended,
+            CLSCTX.CLSCTX_LOCAL_SERVER,
+            REGCLS.REGCLS_MULTIPLEUSE | REGCLS.REGCLS_SUSPENDED,
             out _cookie);
         if (hr < 0)
         {
@@ -81,10 +73,10 @@ internal static class PluginComServer
             Marshal.ThrowExceptionForHR(hr);
         }
 
-        hr = CoResumeClassObjects();
+        hr = PInvoke.CoResumeClassObjects();
         if (hr < 0)
         {
-            CoRevokeClassObject(_cookie);
+            PInvoke.CoRevokeClassObject(_cookie);
             _factory = null;
             _cookie = 0;
             Marshal.ThrowExceptionForHR(hr);
@@ -96,23 +88,10 @@ internal static class PluginComServer
     {
         if (_cookie != 0)
         {
-            CoRevokeClassObject(_cookie);
+            PInvoke.CoRevokeClassObject(_cookie);
             _cookie = 0;
         }
         _factory = null;
     }
 
-    [DllImport("ole32.dll")]
-    private static extern int CoRegisterClassObject(
-        ref Guid clsid,
-        [MarshalAs(UnmanagedType.IUnknown)] object classObject,
-        int context,
-        int flags,
-        out int cookie);
-
-    [DllImport("ole32.dll")]
-    private static extern int CoResumeClassObjects();
-
-    [DllImport("ole32.dll")]
-    private static extern int CoRevokeClassObject(int cookie);
 }

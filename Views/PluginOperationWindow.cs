@@ -6,8 +6,10 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using PasskeyManager.Models;
 using PasskeyManager.Services;
-using System.Runtime.InteropServices;
 using Windows.Graphics;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace PasskeyManager.Views;
 
@@ -150,19 +152,19 @@ internal sealed class PluginOperationWindow
 
         Handle = WinRT.Interop.WindowNative.GetWindowHandle(Window);
         var appWindow = Window.AppWindow;
-        var dpi = GetDpiForWindow(Handle) / 96.0;
+        var dpi = PInvoke.GetDpiForWindow((HWND)Handle) / 96.0;
         var width = (int)(560 * dpi);
         var height = (int)((RelyingPartyRules.IsLearningSite(rpId) ? 460 : 570) * dpi);
         var area = new RectInt32(0, 0, width, height);
-        if (ownerWindow != nint.Zero && GetWindowRect(ownerWindow, out var ownerRect))
+        if (ownerWindow != nint.Zero && PInvoke.GetWindowRect((HWND)ownerWindow, out var ownerRect))
         {
-            area.X = Math.Max(0, ownerRect.Left + ((ownerRect.Right - ownerRect.Left - width) / 2));
-            area.Y = Math.Max(0, ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top - height) / 2));
+            area.X = Math.Max(0, ownerRect.left + ((ownerRect.right - ownerRect.left - width) / 2));
+            area.Y = Math.Max(0, ownerRect.top + ((ownerRect.bottom - ownerRect.top - height) / 2));
         }
         appWindow.MoveAndResize(area);
         if (ownerWindow != nint.Zero)
         {
-            SetWindowLongPtr(Handle, -6, ownerWindow); // GWLP_HWNDPARENT
+            PInvoke.SetWindowLongPtr((HWND)Handle, WINDOW_LONG_PTR_INDEX.GWLP_HWNDPARENT, ownerWindow);
         }
         appWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
         if (appWindow.Presenter is OverlappedPresenter presenter)
@@ -190,21 +192,4 @@ internal sealed class PluginOperationWindow
         StatusText.Text = message;
     }
 
-    [DllImport("user32.dll")]
-    private static extern uint GetDpiForWindow(nint window);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool GetWindowRect(nint window, out NativeRect rect);
-
-    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
-    private static extern nint SetWindowLongPtr(nint window, int index, nint value);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct NativeRect
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
 }

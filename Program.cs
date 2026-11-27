@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using Windows.Win32;
+using Windows.Win32.System.Com;
 
 namespace PasskeyManager;
 
@@ -7,19 +9,17 @@ internal static class Program
     private const int RpcETooLate = unchecked((int)0x80010119);
 
     [STAThread]
-    private static void Main(string[] args)
+    private static unsafe void Main(string[] args)
     {
         // Match the official sample's COM security setup before WinUI starts its STA loop.
-        var hr = CoInitializeSecurity(
-            nint.Zero,
+        var hr = PInvoke.CoInitializeSecurity(
+            default,
             -1,
-            nint.Zero,
-            nint.Zero,
-            0,
-            3,
-            nint.Zero,
-            0,
-            nint.Zero);
+            default,
+            RPC_C_AUTHN_LEVEL.RPC_C_AUTHN_LEVEL_DEFAULT,
+            RPC_C_IMP_LEVEL.RPC_C_IMP_LEVEL_IMPERSONATE,
+            null,
+            EOLE_AUTHENTICATION_CAPABILITIES.EOAC_NONE);
         if (hr < 0 && hr != RpcETooLate)
         {
             Marshal.ThrowExceptionForHR(hr);
@@ -46,15 +46,4 @@ internal static class Program
         }
     }
 
-    [DllImport("ole32.dll")]
-    private static extern int CoInitializeSecurity(
-        nint securityDescriptor,
-        int authenticationServices,
-        nint authenticationServiceArray,
-        nint reserved1,
-        int authenticationLevel,
-        int impersonationLevel,
-        nint authenticationList,
-        int capabilities,
-        nint reserved3);
 }
